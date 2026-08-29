@@ -110,43 +110,37 @@ def seconds_from_edge_ticks(value: object) -> float:
 
 
 def build_sentence_timeline(
-    text: str, word_boundaries: list, voice: str, rate: str
+    sentence_boundaries: list, voice: str, rate: str
 ) -> dict:
-    """把 edge-tts 的 WordBoundary 词级时间近似映射为句子级起止时间。"""
-    sentences = split_reading_sentences(text)
+    """直接使用 edge-tts 返回的句级边界构建精准时间轴。"""
     entries = []
-    boundary_count = len(word_boundaries)
-    cursor = 0
-    for index, sentence in enumerate(sentences):
-        word_count = count_spoken_words(sentence)
-        start_boundary_index = min(cursor, max(0, boundary_count - 1))
-        end_boundary_index = min(cursor + word_count - 1, max(0, boundary_count - 1))
-        if boundary_count > 0:
-            start_boundary = word_boundaries[start_boundary_index]
-            end_boundary = word_boundaries[end_boundary_index]
-            start = seconds_from_edge_ticks(start_boundary.get("offset", 0))
-            end = seconds_from_edge_ticks(end_boundary.get("offset", 0)) + seconds_from_edge_ticks(
-                end_boundary.get("duration", 0)
-            )
-            if end <= start:
-                end = start + 0.25
-        else:
-            start = 0.0
-            end = 0.0
+    previous_start = -1.0
+    for index, boundary in enumerate(sentence_boundaries):
+        sentence = str(boundary.get("text", "")).strip()
+        start = seconds_from_edge_ticks(boundary.get("offset"))
+        duration = seconds_from_edge_ticks(boundary.get("duration"))
+        end = start + duration
+        if not sentence:
+            raise RuntimeError(f"第 {index + 1} 个 SentenceBoundary 缺少文本。")
+        if duration <= 0 or end <= start:
+            raise RuntimeError(f"第 {index + 1} 个 SentenceBoundary 时间无效。")
+        if start + 0.05 < previous_start:
+            raise RuntimeError("SentenceBoundary 起始时间不是递增顺序。")
         entries.append(
             {
                 "index": index,
-                "start": round(start, 3),
-                "end": round(end, 3),
-                "word_count": word_count,
+                "start": round(start, 4),
+                "end": round(end, 4),
+                "word_count": count_spoken_words(sentence),
                 "text": sentence,
             }
         )
-        cursor += word_count
+        previous_start = start
     return {
         "version": 1,
         "kind": "sentence",
         "engine": "edge-tts",
+        "boundary": "SentenceBoundary",
         "voice": voice,
         "rate": rate,
         "sentences": entries,
@@ -287,7 +281,7 @@ class TTSEngine:
         self.controller = controller
         self.cancel_event = cancel_event or threading.Event()
         self.proxy = detect_proxy()
-        self.word_boundaries: list = []
+        self.sentence_boundaries: list = []
         self.timeline: Optional[dict] = None
 
     # ---------------- 对外入口 ----------------
@@ -323,7 +317,8 @@ class TTSEngine:
         """执行一次流式生成，返回 'done' | 'cancel' | 'retry'。"""
         temp_path = self._temp_path(output_path)
         self._safe_unlink(temp_path)
-        self.word_boundaries = []
+        self.sentence_boundaries = []
+        self.timeline = None
 
         communicate = edge_tts.Communicate(
             text=text,
@@ -331,7 +326,7 @@ class TTSEngine:
             rate=cfg.rate,
             volume=cfg.volume,
             pitch=cfg.pitch,
-            boundary="WordBoundary",
+            boundary="SentenceBoundary",
             proxy=self.proxy,
             connect_timeout=CONNECT_TIMEOUT,
             receive_timeout=RECEIVE_TIMEOUT,
@@ -399,9 +394,9 @@ class TTSEngine:
                         if now - last_report >= PROGRESS_REPORT_INTERVAL:
                             last_report = now
                             self.on_progress(percent, written)
-                    elif chunk_type == "WordBoundary":
-                        self.word_boundaries.append(chunk)
-                        completed_units += 1
+                    elif chunk_type == "SentenceBoundary":
+                        self.sentence_boundaries.append(chunk)
+                        completed_units += estimate_spoken_units(chunk.get("text", ""))
                         percent = min(99, int(completed_units * 100 / total_units))
                         now = time.perf_counter()
                         if now - last_report >= PROGRESS_REPORT_INTERVAL:
@@ -411,16 +406,16 @@ class TTSEngine:
             if written == 0:
                 raise RuntimeError("TTS 未返回任何音频数据。")
 
+            if not self.sentence_boundaries:
+                raise RuntimeError(
+                    "TTS 未返回 SentenceBoundary，无法生成精准时间轴。"
+                )
+            self.timeline = build_sentence_timeline(
+                self.sentence_boundaries, cfg.voice, cfg.rate
+            )
             final_path = os.path.abspath(output_path)
             os.makedirs(os.path.dirname(final_path), exist_ok=True)
             self._safe_replace(temp_path, final_path)
-            self.timeline = (
-                build_sentence_timeline(
-                    text, self.word_boundaries, cfg.voice, cfg.rate
-                )
-                if self.word_boundaries
-                else None
-            )
             self.on_progress(100, written)
             return "done"
 

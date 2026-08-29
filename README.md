@@ -61,7 +61,7 @@
 
 - **保存即打包 ZIP**：点击「保存下载」时，自动生成一个 ZIP 压缩包，里面同时包含 MP3 和同名 `.timeline.json`——每句话的起止秒数清清楚楚，不用手动配对；
 - **试听实时高亮**：点击「试听」后，正在朗读的句子会在原文中逐句点亮，像 K 歌字幕一样跟着进度走，跟读复习特别方便；
-- **零额外成本**：时间轴来自生成时微软 TTS 返回的逐词时间，**不需要再次合成**，纯本地生成、完全免费、无需 API Key。
+- **精准且零额外合成**：MP3 与时间轴在同一次请求中生成，时间轴直接使用微软 TTS 返回的句级边界，**不需要再次合成**，纯本地保存、完全免费、无需 API Key。
 
 <p align="center">
   <img src="assets/ui-timeline-help.png" alt="时间轴 JSON 帮助弹窗（含示例与高亮演示）" width="540">
@@ -72,9 +72,10 @@
 
 ```json
 {
+  "boundary": "SentenceBoundary",
   "sentences": [
     { "index": 0, "text": "你好，欢迎使用 Edge TTS 语音合成助手。", "start": 0.00, "end": 3.12 },
-    { "index": 1, "text": "时间轴来自微软 TTS 的逐词时间，无需二次合成。", "start": 3.12, "end": 6.80 }
+    { "index": 1, "text": "时间轴来自微软 TTS 的句级边界，无需二次合成。", "start": 3.12, "end": 6.80 }
   ]
 }
 ```
@@ -158,7 +159,7 @@ The feature we are most proud of — enable the **Timeline JSON + highlight** to
 
 - **Save = one ZIP**: clicking **Save Audio** produces a single ZIP that bundles the MP3 with its `.timeline.json` (start/end seconds for every sentence) — nothing to pair up by hand;
 - **Live highlight while playing**: the sentence being read lights up in the article in real time, sentence by sentence — great for shadowing, subtitles and review;
-- **Zero extra cost**: the timeline comes from the word-boundary data Microsoft TTS returns during generation — **no re-rendering** is ever needed. 100% local, free, no API key.
+- **Precise with no extra synthesis**: the MP3 and timeline are produced in the same request, using sentence-boundary metadata returned directly by Microsoft TTS. **No re-rendering** is needed; files are saved locally, free, with no API key.
 
 <p align="center">
   <img src="assets/ui-timeline-help.png" alt="Timeline JSON help dialog (example + highlight demo)" width="540">
@@ -169,9 +170,10 @@ Example `.timeline.json`:
 
 ```json
 {
+  "boundary": "SentenceBoundary",
   "sentences": [
     { "index": 0, "text": "Hello, welcome to Edge TTS Voice Studio.", "start": 0.00, "end": 3.12 },
-    { "index": 1, "text": "The timeline is built from Microsoft TTS word boundaries, no re-render needed.", "start": 3.12, "end": 6.80 }
+    { "index": 1, "text": "The timeline uses Microsoft TTS sentence boundaries, no re-render needed.", "start": 3.12, "end": 6.80 }
   ]
 }
 ```
@@ -324,8 +326,8 @@ The installer is generated with Inno Setup and includes the bundled application 
 Pushing a version tag matching `v*` runs `.github/workflows/build-release.yml`. The workflow builds the Windows directory app, the portable EXE, and the Inno Setup installer, then uploads them to a GitHub Release.
 
 ```bash
-git tag v1.2.0
-git push origin v1.1.1
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 ## Privacy and Service Notice

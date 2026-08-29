@@ -1,5 +1,16 @@
 # Release Notes
 
+## v1.3.0
+
+### Fixed
+
+- Timeline JSON now uses the `SentenceBoundary` metadata returned by Microsoft TTS in the same synthesis stream as the MP3. Sentence start and end times are no longer estimated by grouping word boundaries, so playback highlighting stays aligned after seeking and no longer accumulates timing drift in long articles.
+- Timeline generation now fails clearly and retries when sentence metadata is missing or invalid instead of saving an apparently valid but inaccurate JSON file.
+
+### Improved
+
+- Timeline JSON includes `"boundary": "SentenceBoundary"` while retaining the existing `sentences` array and compatibility fields.
+
 ## v1.2.0
 
 ### New
@@ -42,7 +53,7 @@
 
 ### New
 
-- New toggle in Settings (设置): **"Save a .timeline.json beside the MP3"**. When enabled, saving/downloading an MP3 also writes a sentence-timeline JSON with the same base name (e.g. `my-audio.timeline.json`), listing each sentence's start/end seconds built from Edge TTS word-boundary metadata — no extra render is needed.
+- New toggle in Settings (设置): **"Save a .timeline.json beside the MP3"**. When enabled, saving/downloading an MP3 also writes a sentence-timeline JSON with the same base name (e.g. `my-audio.timeline.json`), listing each sentence's start/end seconds from Edge TTS metadata — no extra render is needed.
 
 
 ## v1.0.8

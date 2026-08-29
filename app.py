@@ -48,7 +48,7 @@ from voice_groups import (
 from page_import import Page, import_file, split_text_into_pages
 
 APP_NAME = "Edge TTS 语音合成助手"
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.0"
 DEVELOPER = "WangYufan"
 DEVELOPER_QQ = "1471056247"
 REPOSITORY_URL = "https://github.com/JJosephph/ms-edge-tts-gui"
@@ -190,7 +190,7 @@ class App(ctk.CTk):
         "gender_other": {"zh": "其他", "en": "Other"},
         "timeline": {"zh": "时间轴 JSON + 试听高亮", "en": "Timeline JSON + highlight"},
         "timeline_help_title": {"zh": "时间轴 JSON 与试听高亮", "en": "Timeline JSON & Playback Highlight"},
-        "timeline_help_desc": {"zh": "开启后：① 保存/下载音频时，自动打包成 ZIP（内含 MP3 与同名 .timeline.json，记录每句起止秒数）；② 试听播放时，正在朗读的句子会在文章中实时高亮。时间轴来自生成时微软 TTS 返回的逐词时间，无需再次合成。", "en": "When enabled: 1) saving/downloading bundles the MP3 and a .timeline.json (each sentence's start/end seconds) into one ZIP; 2) during playback, the sentence being read is highlighted live. The timeline is built from Microsoft TTS word-boundary data captured at generation time - no re-rendering needed."},
+        "timeline_help_desc": {"zh": "开启后：① 保存/下载音频时，自动打包成 ZIP（内含 MP3 与同名 .timeline.json，记录每句起止秒数）；② 试听播放时，正在朗读的句子会在文章中实时高亮。时间轴与音频在同一次合成中生成，直接使用微软 TTS 返回的句级边界，无需再次合成。", "en": "When enabled: 1) saving/downloading bundles the MP3 and a .timeline.json (each sentence's start/end seconds) into one ZIP; 2) during playback, the sentence being read is highlighted live. Audio and timeline are produced in the same synthesis using Microsoft TTS sentence-boundary metadata - no re-rendering needed."},
         "timeline_help_json_title": {"zh": "示例 .timeline.json", "en": "Example .timeline.json"},
         "timeline_help_highlight_title": {"zh": "高亮演示（试听时实时跟随）", "en": "Highlight demo (follows live during playback)"},
         "timeline_help_demo_btn": {"zh": "▶ 演示高亮", "en": "▶ Demo highlight"},
@@ -1585,6 +1585,7 @@ class App(ctk.CTk):
             '  "version": 1,\n'
             '  "kind": "sentence",\n'
             '  "engine": "edge-tts",\n'
+            '  "boundary": "SentenceBoundary",\n'
             '  "voice": "en-US-AndrewMultilingualNeural",\n'
             '  "rate": "+0%",\n'
             '  "sentences": [\n'
