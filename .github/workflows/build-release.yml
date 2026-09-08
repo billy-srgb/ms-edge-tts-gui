@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号（不要带 v，例如 1.5.0）"
+        required: true
+        type: string
+        default: "1.5.0"
 
 permissions:
   contents: write
@@ -13,6 +20,7 @@ env:
 
 jobs:
   build-windows:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     steps:
       - name: 检出代码
@@ -32,7 +40,8 @@ jobs:
       - name: 写入版本号
         shell: bash
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#v}"
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
           python -c "import pathlib,re; version='$VERSION'; p=pathlib.Path('src/edgettsgui/config.py'); t=p.read_text(encoding='utf-8'); t,n=re.subn(r'APP_VERSION = \"[^\"]*\"', f'APP_VERSION = \"{version}\"', t, count=1); assert n==1; p.write_text(t, encoding='utf-8')"
 
@@ -49,6 +58,7 @@ jobs:
           generate_release_notes: true
 
   build-macos:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-latest
     steps:
       - name: 检出代码
@@ -67,7 +77,8 @@ jobs:
 
       - name: 写入版本号
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#v}"
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
           python -c "import pathlib,re; version='$VERSION'; p=pathlib.Path('src/edgettsgui/config.py'); t=p.read_text(encoding='utf-8'); t,n=re.subn(r'APP_VERSION = \"[^\"]*\"', f'APP_VERSION = \"{version}\"', t, count=1); assert n==1; p.write_text(t, encoding='utf-8')"
 
@@ -81,6 +92,7 @@ jobs:
           generate_release_notes: false
 
   build-linux:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-22.04
     steps:
       - name: 检出代码
@@ -113,7 +125,8 @@ jobs:
 
       - name: 写入版本号
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#v}"
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
           python -c "import pathlib,re; version='$VERSION'; p=pathlib.Path('src/edgettsgui/config.py'); t=p.read_text(encoding='utf-8'); t,n=re.subn(r'APP_VERSION = \"[^\"]*\"', f'APP_VERSION = \"{version}\"', t, count=1); assert n==1; p.write_text(t, encoding='utf-8')"
 
