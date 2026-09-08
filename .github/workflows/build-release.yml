@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  PYTHON_VERSION: "3.11"
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -18,7 +21,7 @@ jobs:
       - name: 设置 Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
 
       - name: 安装依赖
@@ -26,18 +29,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: 生成版本信息
+      - name: 写入版本号
         shell: bash
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="$(python scripts/set_version.py "${GITHUB_REF_NAME}")"
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
-          sed -i "s/APP_VERSION = .*/APP_VERSION = \"$VERSION\"/" app.py
 
       - name: PyInstaller 打包（目录版，供安装器使用）
-        run: pyinstaller --noconfirm --clean --onedir --windowed --name EdgeTTSGui --icon assets/app.ico --hidden-import docx --hidden-import pypdf app.py
+        run: pyinstaller --noconfirm --clean --onedir --windowed --name EdgeTTSGui --icon assets/app.ico --hidden-import docx --hidden-import pypdf --hidden-import certifi --collect-data certifi --collect-all customtkinter app.py
 
       - name: PyInstaller 打包（便携单文件版）
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name EdgeTTSGui-Portable --icon assets/app.ico --hidden-import docx --hidden-import pypdf app.py
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name EdgeTTSGui-Portable --icon assets/app.ico --hidden-import docx --hidden-import pypdf --hidden-import certifi --collect-data certifi --collect-all customtkinter app.py
 
       - name: 安装 Inno Setup
         run: choco install innosetup -y --no-progress
@@ -58,3 +60,89 @@ jobs:
             dist/EdgeTTSGui-Portable.exe
             dist/EdgeTTSGui-Setup.exe
           generate_release_notes: true
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: 写入版本号
+        run: |
+          VERSION="$(python scripts/set_version.py "${GITHUB_REF_NAME}")"
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: PyInstaller 打包 .app
+        run: bash scripts/build_app.sh
+
+      - name: 生成 DMG
+        run: bash scripts/pack_macos_dmg.sh
+
+      - name: 上传到 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/EdgeTTSGui-macOS-*.dmg
+          generate_release_notes: false
+
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libtk8.6 tcl8.6 tk8.6 \
+            libsdl2-2.0-0 libsdl2-mixer-2.0-0 \
+            libasound2 \
+            squashfs-tools \
+            dpkg-dev fakeroot \
+            curl ca-certificates file
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: 确认 tkinter 可用
+        run: python -c "import tkinter; print('tkinter ok', tkinter.TkVersion)"
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: 写入版本号
+        run: |
+          VERSION="$(python scripts/set_version.py "${GITHUB_REF_NAME}")"
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: PyInstaller 打包
+        run: bash scripts/build_app.sh
+
+      - name: 生成 .deb 与 AppImage
+        run: |
+          export VERSION="${APP_VERSION}"
+          bash scripts/pack_linux.sh
+
+      - name: 上传到 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/EdgeTTSGui-linux-*.deb
+            dist/EdgeTTSGui-linux-*.AppImage
+          generate_release_notes: false

@@ -9,7 +9,7 @@
   <a href="https://github.com/JJosephph/ms-edge-tts-gui/releases"><img src="https://img.shields.io/github/v/release/JJosephph/ms-edge-tts-gui?display_name=tag&sort=semver&color=5A8CFF" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-61D69C.svg" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Python-3.10%2B-356FEB.svg" alt="Python 3.10+">
-  <img src="https://img.shields.io/badge/Platform-Windows-5A8CFF.svg" alt="Windows">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-5A8CFF.svg" alt="Windows, macOS, Linux">
   <a href="https://github.com/JJosephph/ms-edge-tts-gui/stargazers"><img src="https://img.shields.io/github/stars/JJosephph/ms-edge-tts-gui?style=flat&color=F6C66C" alt="GitHub stars"></a>
 </p>
 
@@ -37,7 +37,7 @@
 
 ## 中文说明
 
-**Edge TTS 语音合成助手**是一款免费、开源的 Windows 桌面软件（MIT License，开发者 WangYufan）。将文章、笔记、脚本等文字合成为自然的 MP3 音频，不需要 API Key。它支持**导入文件 · 逐页旁白配音**（工作助手模式）与**时间轴 JSON + 试听逐句高亮**（保存时自动打包 ZIP），并提供**语言 → 性别 → 音色**三级语音选择，几百个音色不再大海捞针。界面可随时切换中文和 English，适合全世界用户。
+**Edge TTS 语音合成助手**是一款免费、开源的桌面软件（Windows / macOS / Linux，MIT License，开发者 WangYufan）。将文章、笔记、脚本等文字合成为自然的 MP3 音频，不需要 API Key。它支持**导入文件 · 逐页旁白配音**（工作助手模式）与**时间轴 JSON + 试听逐句高亮**（保存时自动打包 ZIP），并提供**语言 → 性别 → 音色**三级语音选择，几百个音色不再大海捞针。界面可随时切换中文和 English，适合全世界用户。
 
 - **生成、试听与保存**：一键生成全文音频；生成后可随时“试听”或“保存下载”，无需重复合成。
 - **实时进度**：生成时显示近似 `0–100%` 进度，完成后进度条保持 100%。
@@ -102,17 +102,17 @@ pages_archive.zip
 
 ### 下载与使用
 
-1. 在 [Releases](https://github.com/JJosephph/ms-edge-tts-gui/releases) 下载 `EdgeTTSGui-Setup.exe`，安装时可选任意磁盘或文件夹。
-2. 安装包与便携版 EXE 均已内置 Python 运行环境，Windows 10 及更高版本无需另行安装 Python。
+1. 在 [Releases](https://github.com/JJosephph/ms-edge-tts-gui/releases) 按系统下载：Windows 用 `EdgeTTSGui-Setup.exe`，Apple 芯片 Mac 用 `EdgeTTSGui-macOS-arm64.dmg`，Linux 用 `.deb` 或 AppImage。
+2. 各平台安装包均已内置 Python 运行环境，无需另行安装 Python。
 3. 粘贴文章、选择语音、调整语速 / 音量 / 音调，点击“生成音频”合成一次；之后点“试听”播放，或点“保存下载”导出 MP3，全程无需重复合成。
-4. 安装包会标明“免费 · 开源（MIT License）· 开发者 WangYufan”，支持从 Windows“设置 → 应用”或安装目录中的 `unins000.exe` 卸载。
+4. Windows 安装包会标明“免费 · 开源（MIT License）· 开发者 WangYufan”，支持从“设置 → 应用”或安装目录中的 `unins000.exe` 卸载。macOS 首次打开若被拦截，请在访达中右键 App 选择“打开”。
 
 ---
 
 ## English Guide
 
 
-**Edge TTS Voice Studio** is a modern Windows desktop application for turning articles, notes, scripts, documentation, and other text into high-quality MP3 audio. It is powered by the open-source [`edge-tts`](https://github.com/rany2/edge-tts) library and Microsoft Edge online voices—**no API key is required**. It is **free and open source under the MIT License**, developed by **WangYufan**.
+**Edge TTS Voice Studio** is a modern desktop application (Windows / macOS / Linux) for turning articles, notes, scripts, documentation, and other text into high-quality MP3 audio. It is powered by the open-source [`edge-tts`](https://github.com/rany2/edge-tts) library and Microsoft Edge online voices—**no API key is required**. It is **free and open source under the MIT License**, developed by **WangYufan**.
 
 The project is designed as a general-purpose open-source tool. It features an **Import & page-by-page dubbing** work-assistant mode (txt / md / docx / pdf), a **Timeline JSON + live sentence highlight** mode (Save bundles the MP3 and timeline into one ZIP), and a **Language → Gender → Voice** cascading voice picker across hundreds of voices. It also includes practical safeguards for real-world network conditions: service reachability checks, proxy-aware diagnostics, retry controls, and a stalled-generation prompt.
 
@@ -186,25 +186,27 @@ Open the [Releases](https://github.com/JJosephph/ms-edge-tts-gui/releases) page 
 
 | Package | What it is | Best for | Notes |
 | --- | --- | --- | --- |
-| `EdgeTTSGui-Setup.exe` | Installer (Inno Setup) | Most Windows users | Bilingual (中文/English) wizard that states **free & open source (MIT License)** and **developer WangYufan**; choose any drive/folder; desktop shortcut; **full uninstall support**; Star prompt after install. |
-| `EdgeTTSGui-Portable.exe` | Single-file portable | Take-anywhere / no-install use | Python runtime and libraries bundled in one file; double-click to run; largest download. |
-| `EdgeTTSGui/EdgeTTSGui.exe` | Main launcher of the folder build | Advanced / manual deployment | Small 5 MB launcher — it needs its sibling `_internal\` folder to run, so treat the whole `EdgeTTSGui\` folder as the package. |
+| `EdgeTTSGui-Setup.exe` | Windows installer (Inno Setup) | Most Windows users | Bilingual (中文/English) wizard that states **free & open source (MIT License)** and **developer WangYufan**; choose any drive/folder; desktop shortcut; **full uninstall support**; Star prompt after install. |
+| `EdgeTTSGui-Portable.exe` | Windows single-file portable | Take-anywhere / no-install use | Python runtime and libraries bundled in one file; double-click to run; largest download. |
+| `EdgeTTSGui-macOS-arm64.dmg` | macOS disk image | Apple Silicon Macs | Drag `EdgeTTSGui.app` into Applications. The first launch may require **Right-click → Open** because the DMG is not Apple-notarized. |
+| `EdgeTTSGui-linux-amd64.deb` | Debian / Ubuntu installer | Most Linux desktops | Installs to `/opt/EdgeTTSGui` and adds a menu shortcut. |
+| `EdgeTTSGui-linux-x86_64.AppImage` | Linux portable | Distro-agnostic / no-install use | `chmod +x` then double-click or run from a terminal. |
 
-**Which one should I download?** If you are not sure, pick `EdgeTTSGui-Setup.exe` — it installs cleanly and can be uninstalled. `EdgeTTSGui-Portable.exe` is the drop-in no-install choice.
+**Which one should I download?** On Windows, pick `EdgeTTSGui-Setup.exe` unless you want the portable EXE. On a recent Mac, pick the DMG. On Linux, pick the `.deb` if you use Debian/Ubuntu, otherwise the AppImage.
 
 All packages are **free and open source (MIT License)**, maintained by **WangYufan**.
 
 ### Is Python included?
 
-**Yes.** Published EXE packages bundle the Python runtime and required libraries through PyInstaller. On Windows 10 or later, users can install or run the program without installing Python separately.
+**Yes.** Published packages bundle the Python runtime and required libraries through PyInstaller. You can install or run the program without installing Python separately.
 
 ## Quick Start
 
-### Option A — Install the Windows release
+### Option A — Install a release build
 
-1. Download `EdgeTTSGui-Setup.exe` from [Releases](https://github.com/JJosephph/ms-edge-tts-gui/releases).
-2. Run the installer and choose any destination drive or folder.
-3. Launch **Edge TTS Voice Studio** from the Start menu or desktop shortcut.
+1. Download the package for your system from [Releases](https://github.com/JJosephph/ms-edge-tts-gui/releases).
+2. Windows: run `EdgeTTSGui-Setup.exe` and choose a destination folder. macOS: open the DMG and drag the app to Applications. Linux: install the `.deb` or run the AppImage.
+3. Launch **Edge TTS Voice Studio**.
 4. Paste text, click **Generate Audio**, then **Play** to preview or **Save Audio** to export the MP3.
 
 ### Option B — Run from source
@@ -213,8 +215,9 @@ All packages are **free and open source (MIT License)**, maintained by **WangYuf
 git clone https://github.com/JJosephph/ms-edge-tts-gui.git
 cd ms-edge-tts-gui
 
-py -3 -m venv .venv
-.venv\Scripts\activate
+python3 -m venv .venv
+# Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 python app.py
 ```
@@ -273,6 +276,8 @@ The installed program can be uninstalled normally:
 
 The uninstaller removes the application files and shortcuts.
 
+On Linux, remove the `.deb` install with `sudo apt remove edgettsgui`. The AppImage is just a file — delete it. On macOS, drag `EdgeTTSGui.app` from Applications to the Trash.
+
 ## Defaults and Voice Recommendations
 
 The compatibility preset is intentionally explicit:
@@ -298,8 +303,11 @@ ms-edge-tts-gui/
 
 ├── assets/                      # Icon and README interface previews
 ├── installer/EdgeTTSGui.iss     # Inno Setup installer definition
+├── installer/linux/             # Linux .desktop entry
+├── scripts/                     # macOS DMG / Linux .deb+AppImage packagers
 ├── run.bat                      # Windows source launcher
-├── build_release.bat            # Builds directory app, portable EXE, and installer
+├── build_release.bat            # Windows: directory app, portable EXE, installer
+├── build_release.sh             # macOS / Linux local release build
 └── .github/workflows/           # Tagged-release automation
 ```
 
@@ -321,13 +329,25 @@ dist\EdgeTTSGui-Setup.exe
 
 The installer is generated with Inno Setup and includes the bundled application runtime.
 
-### GitHub release automation
-
-Pushing a version tag matching `v*` runs `.github/workflows/build-release.yml`. The workflow builds the Windows directory app, the portable EXE, and the Inno Setup installer, then uploads them to a GitHub Release.
+### Local macOS / Linux build
 
 ```bash
-git tag v1.3.0
-git push origin v1.3.0
+./build_release.sh
+```
+
+On macOS this produces `dist/EdgeTTSGui-macOS-<arch>.dmg`. On Linux it produces `dist/EdgeTTSGui-linux-amd64.deb` and `dist/EdgeTTSGui-linux-x86_64.AppImage`.
+
+### GitHub release automation
+
+Pushing a version tag matching `v*` runs `.github/workflows/build-release.yml`. The workflow builds and uploads:
+
+- Windows: directory launcher, portable EXE, Inno Setup installer
+- macOS: Apple Silicon DMG
+- Linux: `.deb` and AppImage (built on Ubuntu 22.04 for glibc compatibility)
+
+```bash
+git tag v1.4.0
+git push origin v1.4.0
 ```
 
 ## Privacy and Service Notice

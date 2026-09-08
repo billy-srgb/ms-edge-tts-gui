@@ -13,6 +13,7 @@ import os
 import queue
 import re
 import shutil
+import sys
 import zipfile
 import tempfile
 import time
@@ -49,13 +50,32 @@ from voice_groups import (
 from page_import import Page, import_file, split_text_into_pages
 
 APP_NAME = "Edge TTS 语音合成助手"
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.4.0"
 DEVELOPER = "WangYufan"
 DEVELOPER_QQ = "1471056247"
 REPOSITORY_URL = "https://github.com/JJosephph/ms-edge-tts-gui"
 REPOSITORY_DISPLAY = "github.com/JJosephph/ms-edge-tts-gui"
-UI_FONT_FAMILY = "Microsoft YaHei UI"
-SETTINGS_DIR = Path(os.environ.get("APPDATA", Path.home())) / "EdgeTTSGui"
+
+
+def _ui_font_family() -> str:
+    if sys.platform == "darwin":
+        return "PingFang SC"
+    if sys.platform.startswith("linux"):
+        return "Noto Sans CJK SC"
+    return "Microsoft YaHei UI"
+
+
+def _settings_dir() -> Path:
+    if sys.platform == "win32":
+        return Path(os.environ.get("APPDATA", Path.home())) / "EdgeTTSGui"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "EdgeTTSGui"
+    xdg = os.environ.get("XDG_CONFIG_HOME")
+    return (Path(xdg) if xdg else Path.home() / ".config") / "EdgeTTSGui"
+
+
+UI_FONT_FAMILY = _ui_font_family()
+SETTINGS_DIR = _settings_dir()
 SETTINGS_FILE = SETTINGS_DIR / "settings.json"
 PREVIEW_FILENAME = "edge_tts_preview.mp3"
 
@@ -1848,9 +1868,8 @@ def main():
     except Exception:
         import traceback
         try:
-            log_dir = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "EdgeTTSGui")
-            os.makedirs(log_dir, exist_ok=True)
-            with open(os.path.join(log_dir, "crash.log"), "w", encoding="utf-8") as crash_file:
+            SETTINGS_DIR.mkdir(parents=True, exist_ok=True)
+            with open(SETTINGS_DIR / "crash.log", "w", encoding="utf-8") as crash_file:
                 crash_file.write(traceback.format_exc())
         except Exception:
             pass

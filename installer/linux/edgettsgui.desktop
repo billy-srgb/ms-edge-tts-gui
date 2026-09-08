@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Edge TTS Voice Studio
+Name[zh_CN]=Edge TTS 语音合成助手
+GenericName=Text to Speech
+Comment=Turn text into natural MP3 audio with Microsoft Edge voices
+Comment[zh_CN]=用微软 Edge 语音把文字合成自然的 MP3 音频
+Exec=EdgeTTSGui
+Icon=EdgeTTSGui
+Terminal=false
+Categories=AudioVideo;Audio;
+StartupNotify=true
+StartupWMClass=EdgeTTSGui

@@ -9,5 +9,5 @@
 
 ## 仓库工作流
 
-- 版本流程：改代码 → bump app.py APP_VERSION 与 installer/EdgeTTSGui.iss → RELEASE_NOTES 更新 → 本地 build_release.bat → commit → push main → tag vX.Y.Z → push tag（CI 自动发布）。
+- 版本流程：改代码 → bump app.py APP_VERSION 与 installer/EdgeTTSGui.iss → RELEASE_NOTES 更新 → 本地 build_release.bat（Windows）或 build_release.sh（macOS / Linux）→ commit → push main → tag vX.Y.Z → push tag（CI 自动发布 Windows / macOS DMG / Linux .deb+AppImage）。
 - 用户要求按指定版本号进行，不要擅自改动 GitHub 上的版本与 release。

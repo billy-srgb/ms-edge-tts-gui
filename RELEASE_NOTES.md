@@ -1,5 +1,20 @@
 # Release Notes
 
+## v1.4.0
+
+### New
+
+- Tagged GitHub releases now also publish a macOS Apple Silicon DMG (`EdgeTTSGui-macOS-arm64.dmg`) and Linux installers (`EdgeTTSGui-linux-amd64.deb`, `EdgeTTSGui-linux-x86_64.AppImage`) alongside the existing Windows packages.
+
+### Fixed
+
+- Network checks on official macOS Python no longer fail with `CERTIFICATE_VERIFY_FAILED` / missing local issuer certificate. The probe now uses the `certifi` CA bundle instead of an empty system trust store.
+
+### Improved
+
+- Settings and crash logs use the platform-standard user-data directory (Windows `%APPDATA%`, macOS Application Support, Linux XDG config).
+- UI fonts fall back to PingFang SC on macOS and Noto Sans CJK SC on Linux.
+
 ## v1.3.0
 
 ### Fixed
