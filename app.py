@@ -34,6 +34,7 @@ from tts_engine import (
     TTSConfig,
     TTSEngine,
     detect_proxy,
+    is_ssl_cert_error,
     list_tts_voices,
     probe_network,
 )
@@ -810,7 +811,14 @@ class App(ctk.CTk):
             self.log(f"网络检测通过{note}")
         else:
             self._net_dot.configure(text=self._t("network_bad"), text_color="#f7768e")
-            if result.proxy:
+            if is_ssl_cert_error(result.error):
+                self.log(
+                    f"[网络] SSL 证书校验失败（{result.error}）。"
+                    "这通常是本机 Python 缺少系统证书，不是网络断开。"
+                    "macOS 请运行「Install Certificates.command」，"
+                    "或检查是否使用了会解密 HTTPS 的代理。"
+                )
+            elif result.proxy:
                 self.log(
                     f"[网络] 不可达，检测到代理 {result.proxy}，"
                     "可能是网络不通或代理设置不正确。"
@@ -1696,7 +1704,9 @@ class App(ctk.CTk):
             (r"^\[任务\] 失败：(.*)$", r"[Task] Failed: \1"),
             (r"^\[网络\] 不可达，检测到代理 (.*)，可能是网络不通或代理设置不正确。$", r"[Network] Unreachable; proxy detected: \1. Check the connection or proxy configuration."),
             (r"^\[网络\] 不可达（(.*)）。生成可能很慢或失败，建议检查网络后重试。$", r"[Network] Unreachable (\1). Synthesis may be slow or fail; check your network and retry."),
+            (r"^\[网络\] SSL 证书校验失败（(.*)）。这通常是本机 Python 缺少系统证书，不是网络断开。macOS 请运行「Install Certificates.command」，或检查是否使用了会解密 HTTPS 的代理。$", r"[Network] SSL certificate verification failed (\1). This is usually a missing local CA bundle, not a downed network. On macOS run Install Certificates.command, or check for an HTTPS-inspecting proxy."),
             (r"^\[警告\] 生成失败：(.*)（可能是网络不通或代理设置不正确）$", r"[Warning] Synthesis failed: \1 (network or proxy may be unavailable or misconfigured)"),
+            (r"^\[警告\] 生成失败：(.*)（SSL 证书校验失败（常见于 macOS 官方 Python 未安装证书））$", r"[Warning] Synthesis failed: \1 (SSL certificate verification failed; common on official macOS Python without certificates installed)"),
         ]
         for pattern, replacement in substitutions:
             localized = re.sub(pattern, replacement, message)
@@ -1711,6 +1721,11 @@ class App(ctk.CTk):
             return (
                 "No new audio data has arrived for a while. Your network connection "
                 "or proxy may be unavailable or misconfigured. Would you like to retry?"
+            )
+        if "SSL 证书校验失败" in message:
+            return (
+                "SSL certificate verification failed (common on official macOS Python "
+                "without certificates installed). Would you like to retry?"
             )
         if "网络不通或代理设置不正确" in message:
             return "Your network connection or proxy may be unavailable or misconfigured. Would you like to retry?"

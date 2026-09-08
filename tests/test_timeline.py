@@ -1,6 +1,10 @@
 import unittest
 
-from tts_engine import build_sentence_timeline
+from tts_engine import (
+    _ssl_context,
+    build_sentence_timeline,
+    is_ssl_cert_error,
+)
 
 
 class TimelineTests(unittest.TestCase):
@@ -36,6 +40,21 @@ class TimelineTests(unittest.TestCase):
                 "en-US-AndrewMultilingualNeural",
                 "+0%",
             )
+
+
+class SslBundleTests(unittest.TestCase):
+    def test_ssl_context_loads_certifi_cas(self):
+        context = _ssl_context()
+        self.assertGreater(len(context.get_ca_certs()), 0)
+
+    def test_detects_certificate_verify_failed(self):
+        self.assertTrue(
+            is_ssl_cert_error(
+                "SSLCertVerificationError: certificate verify failed: "
+                "unable to get local issuer certificate"
+            )
+        )
+        self.assertFalse(is_ssl_cert_error("connection timed out"))
 
 
 if __name__ == "__main__":

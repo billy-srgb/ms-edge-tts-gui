@@ -13,12 +13,14 @@ import asyncio
 import os
 import queue
 import re
+import ssl
 import threading
 import time
 from dataclasses import dataclass
 from typing import Callable, Optional
 
 import aiohttp
+import certifi
 import edge_tts
 
 # ---------------------------------------------------------------- 常量
@@ -179,6 +181,39 @@ class ProbeResult:
 # ---------------------------------------------------------------- 代理 / 网络探测
 
 
+def _ssl_context() -> ssl.SSLContext:
+    """使用 certifi 的 CA 包做 HTTPS 校验。
+
+    python.org 在 macOS 上的安装经常缺少默认的 cert.pem，
+    默认 SSL 上下文里一张证书都没有，探测和合成都会报
+    CERTIFICATE_VERIFY_FAILED / unable to get local issuer certificate。
+    """
+    return ssl.create_default_context(cafile=certifi.where())
+
+
+def _ensure_ca_bundle() -> None:
+    """若系统 CA 文件不存在，把 OpenSSL 指到 certifi，供其它 HTTPS 库使用。"""
+    if os.environ.get("SSL_CERT_FILE"):
+        return
+    paths = ssl.get_default_verify_paths()
+    cafile = paths.cafile or paths.openssl_cafile
+    if cafile and os.path.isfile(cafile):
+        return
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+
+
+_ensure_ca_bundle()
+
+
+def is_ssl_cert_error(text: str) -> bool:
+    lowered = (text or "").lower()
+    return (
+        "certificate_verify_failed" in lowered
+        or "unable to get local issuer certificate" in lowered
+        or "sslcertverificationerror" in lowered
+    )
+
+
 def detect_proxy() -> Optional[str]:
     """读取系统代理环境变量（edge-tts 走 aiohttp，会受这些变量影响）。"""
     for key in (
@@ -203,8 +238,10 @@ async def _probe_async(proxy: Optional[str]) -> ProbeResult:
     )
     start = time.perf_counter()
     try:
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(PROBE_URL, proxy=proxy) as resp:
+        ssl_ctx = _ssl_context()
+        connector = aiohttp.TCPConnector(ssl=ssl_ctx)
+        async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
+            async with session.get(PROBE_URL, proxy=proxy, ssl=ssl_ctx) as resp:
                 _ = resp.status  # 只要在超时内返回（哪怕 4xx/5xx）都算可达
         result.reachable = True
         result.latency_ms = round((time.perf_counter() - start) * 1000, 1)
@@ -443,7 +480,10 @@ class TTSEngine:
         return self.controller.ask(message)
 
     def _classify_error(self, exc: Exception) -> str:
-        text = str(exc).lower()
+        text = str(exc)
+        if is_ssl_cert_error(text):
+            return "SSL 证书校验失败（常见于 macOS 官方 Python 未安装证书）"
+        lowered = text.lower()
         network_kw = (
             "timeout",
             "timed out",
@@ -458,7 +498,7 @@ class TTSEngine:
             "clienterror",
             "getaddrinfo",
         )
-        if any(kw in text for kw in network_kw):
+        if any(kw in lowered for kw in network_kw):
             return "可能是网络不通或代理设置不正确"
         return "生成过程中出现异常"
 
