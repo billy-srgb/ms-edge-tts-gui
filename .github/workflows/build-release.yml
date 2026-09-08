@@ -4,13 +4,20 @@ on:
   push:
     tags:
       - "v*"
+  create:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       version:
-        description: "版本号（不要带 v，例如 1.5.0）"
+        description: "版本号（不要带 v，例如 1.6.0）"
         required: true
         type: string
-        default: "1.5.0"
+        default: "1.6.0"
+
+concurrency:
+  group: build-release-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -20,7 +27,7 @@ env:
 
 jobs:
   build-windows:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     steps:
       - name: 检出代码
@@ -58,7 +65,7 @@ jobs:
           generate_release_notes: true
 
   build-macos:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-latest
     steps:
       - name: 检出代码
@@ -92,7 +99,7 @@ jobs:
           generate_release_notes: false
 
   build-linux:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-22.04
     steps:
       - name: 检出代码
