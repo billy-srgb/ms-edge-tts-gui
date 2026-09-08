@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased
+
+### Improved
+
+- Application source now lives under `src/edgettsgui/` (config, i18n, tts, documents, voices, ui) instead of loose modules at the repository root.
+
 ## v1.4.0
 
 ### New

@@ -32,25 +32,12 @@ jobs:
       - name: 写入版本号
         shell: bash
         run: |
-          VERSION="$(python scripts/set_version.py "${GITHUB_REF_NAME}")"
+          VERSION="${GITHUB_REF_NAME#v}"
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          python -c "import pathlib,re; version='$VERSION'; p=pathlib.Path('src/edgettsgui/config.py'); t=p.read_text(encoding='utf-8'); t,n=re.subn(r'APP_VERSION = \"[^\"]*\"', f'APP_VERSION = \"{version}\"', t, count=1); assert n==1; p.write_text(t, encoding='utf-8')"
 
-      - name: PyInstaller 打包（目录版，供安装器使用）
-        run: pyinstaller --noconfirm --clean --onedir --windowed --name EdgeTTSGui --icon assets/app.ico --hidden-import docx --hidden-import pypdf --hidden-import certifi --collect-data certifi --collect-all customtkinter app.py
-
-      - name: PyInstaller 打包（便携单文件版）
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name EdgeTTSGui-Portable --icon assets/app.ico --hidden-import docx --hidden-import pypdf --hidden-import certifi --collect-data certifi --collect-all customtkinter app.py
-
-      - name: 安装 Inno Setup
-        run: choco install innosetup -y --no-progress
-
-      - name: 编译安装程序
-        shell: pwsh
-        run: |
-          $iscc = Get-ChildItem "C:\Program Files (x86)\Inno Setup*\ISCC.exe" | Select-Object -First 1 -ExpandProperty FullName
-          if (-not $iscc) { $iscc = Get-ChildItem "C:\Program Files\Inno Setup*\ISCC.exe" | Select-Object -First 1 -ExpandProperty FullName }
-          & $iscc "/DMyAppVersion=$env:APP_VERSION" installer\EdgeTTSGui.iss
-          Get-ChildItem dist | Select-Object Name, Length
+      - name: 打包 Windows
+        run: scripts\windows.bat
 
       - name: 上传到 Release
         uses: softprops/action-gh-release@v2
@@ -80,14 +67,12 @@ jobs:
 
       - name: 写入版本号
         run: |
-          VERSION="$(python scripts/set_version.py "${GITHUB_REF_NAME}")"
+          VERSION="${GITHUB_REF_NAME#v}"
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          python -c "import pathlib,re; version='$VERSION'; p=pathlib.Path('src/edgettsgui/config.py'); t=p.read_text(encoding='utf-8'); t,n=re.subn(r'APP_VERSION = \"[^\"]*\"', f'APP_VERSION = \"{version}\"', t, count=1); assert n==1; p.write_text(t, encoding='utf-8')"
 
-      - name: PyInstaller 打包 .app
-        run: bash scripts/build_app.sh
-
-      - name: 生成 DMG
-        run: bash scripts/pack_macos_dmg.sh
+      - name: 打包 macOS
+        run: bash scripts/macos.sh
 
       - name: 上传到 Release
         uses: softprops/action-gh-release@v2
@@ -128,16 +113,14 @@ jobs:
 
       - name: 写入版本号
         run: |
-          VERSION="$(python scripts/set_version.py "${GITHUB_REF_NAME}")"
+          VERSION="${GITHUB_REF_NAME#v}"
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          python -c "import pathlib,re; version='$VERSION'; p=pathlib.Path('src/edgettsgui/config.py'); t=p.read_text(encoding='utf-8'); t,n=re.subn(r'APP_VERSION = \"[^\"]*\"', f'APP_VERSION = \"{version}\"', t, count=1); assert n==1; p.write_text(t, encoding='utf-8')"
 
-      - name: PyInstaller 打包
-        run: bash scripts/build_app.sh
-
-      - name: 生成 .deb 与 AppImage
+      - name: 打包 Linux
         run: |
           export VERSION="${APP_VERSION}"
-          bash scripts/pack_linux.sh
+          bash scripts/linux.sh
 
       - name: 上传到 Release
         uses: softprops/action-gh-release@v2

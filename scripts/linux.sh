@@ -1,20 +1,44 @@
 #!/usr/bin/env bash
-# Package dist/EdgeTTSGui into .deb and AppImage installers.
+# Build EdgeTTSGui-linux-*.deb and *.AppImage (must run on Linux).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+if [[ "$(uname -s)" != "Linux" ]]; then
+  echo "Linux 包必须在 Linux 上构建。" >&2
+  exit 1
+fi
+
+if python3 -c "import PyInstaller" >/dev/null 2>&1; then
+  PYTHON=python3
+else
+  if [[ ! -x "$ROOT/.venv/bin/python" ]]; then
+    python3 -m venv "$ROOT/.venv"
+    "$ROOT/.venv/bin/python" -m pip install --upgrade pip
+  fi
+  "$ROOT/.venv/bin/python" -m pip install -r "$ROOT/requirements-dev.txt"
+  PYTHON="$ROOT/.venv/bin/python"
+fi
+
+"$PYTHON" -m PyInstaller \
+  --noconfirm --clean --onedir --windowed \
+  --name EdgeTTSGui \
+  --icon "$ROOT/assets/app-icon-preview.png" \
+  --paths "$ROOT/src" \
+  --hidden-import docx --hidden-import pypdf --hidden-import certifi \
+  --collect-data certifi --collect-all customtkinter --collect-submodules edgettsgui \
+  "$ROOT/src/edgettsgui/__main__.py"
+
 ONEDIR="$ROOT/dist/EdgeTTSGui"
-BIN="$ONEDIR/EdgeTTSGui"
-if [[ ! -x "$BIN" ]]; then
-  echo "Missing $BIN — run scripts/build_app.sh first." >&2
+if [[ ! -x "$ONEDIR/EdgeTTSGui" ]]; then
+  echo "PyInstaller 未生成 $ONEDIR/EdgeTTSGui" >&2
   exit 1
 fi
 
 VERSION="${VERSION:-}"
 if [[ -z "$VERSION" ]]; then
-  VERSION="$(python -c "import re,pathlib; print(re.search(r'APP_VERSION = \"([^\"]+)\"', pathlib.Path('app.py').read_text(encoding='utf-8')).group(1))")"
+  VERSION="$("$PYTHON" -c "import re,pathlib; print(re.search(r'APP_VERSION = \"([^\"]+)\"', pathlib.Path('src/edgettsgui/config.py').read_text(encoding='utf-8')).group(1))")"
 fi
 
 MACHINE="$(uname -m)"
@@ -27,7 +51,6 @@ esac
 ICON_SRC="$ROOT/assets/app-icon-preview.png"
 DESKTOP_SRC="$ROOT/installer/linux/edgettsgui.desktop"
 
-# --- Debian package --------------------------------------------------------
 DEB_ROOT="$ROOT/build/deb/edgettsgui_${VERSION}_${DEB_ARCH}"
 rm -rf "$DEB_ROOT"
 mkdir -p \
@@ -54,8 +77,7 @@ cat > "$DEB_ROOT/usr/bin/edgettsgui" << 'EOF'
 #!/bin/sh
 exec /opt/EdgeTTSGui/EdgeTTSGui "$@"
 EOF
-chmod 755 "$DEB_ROOT/usr/bin/edgettsgui"
-chmod 755 "$DEB_ROOT/opt/EdgeTTSGui/EdgeTTSGui"
+chmod 755 "$DEB_ROOT/usr/bin/edgettsgui" "$DEB_ROOT/opt/EdgeTTSGui/EdgeTTSGui"
 
 SIZE_KB="$(du -sk "$DEB_ROOT" | awk '{print $1}')"
 cat > "$DEB_ROOT/DEBIAN/control" << EOF
@@ -78,14 +100,12 @@ rm -f "$DEB_OUT"
 dpkg-deb --root-owner-group --build "$DEB_ROOT" "$DEB_OUT"
 echo "Wrote $DEB_OUT"
 
-# --- AppImage --------------------------------------------------------------
 APPDIR="$ROOT/build/EdgeTTSGui.AppDir"
 rm -rf "$APPDIR"
 mkdir -p "$APPDIR/usr/bin"
 cp -a "$ONEDIR" "$APPDIR/usr/bin/EdgeTTSGui"
 cp "$ICON_SRC" "$APPDIR/EdgeTTSGui.png"
 cp "$DESKTOP_SRC" "$APPDIR/EdgeTTSGui.desktop"
-
 cat > "$APPDIR/AppRun" << 'EOF'
 #!/bin/bash
 set -e
@@ -94,18 +114,16 @@ HERE=${SELF%/*}
 export PATH="${HERE}/usr/bin:${PATH}"
 exec "${HERE}/usr/bin/EdgeTTSGui/EdgeTTSGui" "$@"
 EOF
-chmod 755 "$APPDIR/AppRun"
-chmod 755 "$APPDIR/usr/bin/EdgeTTSGui/EdgeTTSGui"
+chmod 755 "$APPDIR/AppRun" "$APPDIR/usr/bin/EdgeTTSGui/EdgeTTSGui"
 
 TOOL_DIR="$ROOT/build/appimagetool"
 mkdir -p "$TOOL_DIR"
 TOOL_APPIMAGE="$TOOL_DIR/appimagetool-${APPIMAGE_ARCH}.AppImage"
-TOOL_URL="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${APPIMAGE_ARCH}.AppImage"
 if [[ ! -x "$TOOL_APPIMAGE" ]]; then
-  curl -fsSL -o "$TOOL_APPIMAGE" "$TOOL_URL"
+  curl -fsSL -o "$TOOL_APPIMAGE" \
+    "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${APPIMAGE_ARCH}.AppImage"
   chmod +x "$TOOL_APPIMAGE"
 fi
-
 EXTRACT="$TOOL_DIR/squashfs-root"
 rm -rf "$EXTRACT"
 (
@@ -113,7 +131,6 @@ rm -rf "$EXTRACT"
   export APPIMAGE_EXTRACT_AND_RUN=1
   ./$(basename "$TOOL_APPIMAGE") --appimage-extract
 )
-
 APPIMAGE_OUT="$ROOT/dist/EdgeTTSGui-linux-${APPIMAGE_ARCH}.AppImage"
 rm -f "$APPIMAGE_OUT"
 export APPIMAGE_EXTRACT_AND_RUN=1

@@ -1,6 +1,6 @@
 ﻿; ============================================================
 ; Edge TTS 语音合成助手 - Inno Setup 安装脚本
-; 使用前请先运行 build_release.bat 生成 dist\EdgeTTSGui\
+; 使用前请先运行 make windows 生成 dist\EdgeTTSGui\
 ; 免费开源（MIT License）· 开发者 WangYufan · 支持卸载
 ; ============================================================
 

@@ -215,14 +215,8 @@ All packages are **free and open source (MIT License)**, maintained by **WangYuf
 git clone https://github.com/JJosephph/ms-edge-tts-gui.git
 cd ms-edge-tts-gui
 
-python3 -m venv .venv
-# Windows: .venv\Scripts\activate
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
+make run
 ```
-
-On Windows, you can also double-click `run.bat` for first-run setup and launch.
 
 ## Using the App
 
@@ -295,31 +289,30 @@ This lets existing users of the related RPA workflow start synthesizing immediat
 
 ```text
 ms-edge-tts-gui/
-├── app.py                       # Desktop UI, themes, localization, cache settings
-├── tts_engine.py                # Edge TTS streaming, progress, network and stall handling
-├── text_utils.py                # Markdown/HTML cleanup and preview text extraction
-├── voice_groups.py              # Local grouping engine: Language → Gender → Voice
-├── page_import.py                # Import txt/md/docx/pdf and split into narration-ready pages
-
+├── src/edgettsgui/              # Application package
+│   ├── config.py                # Version, themes, settings paths, defaults
+│   ├── i18n.py                  # UI strings and log localization
+│   ├── tts/engine.py            # Edge TTS streaming, network probe, stall recovery
+│   ├── documents/               # Text cleanup + file import / pagination
+│   ├── voices/groups.py         # Language → Gender → Voice grouping
+│   └── ui/app.py                # Desktop window and user interactions
+├── tests/                       # Unit tests
 ├── assets/                      # Icon and README interface previews
-├── installer/EdgeTTSGui.iss     # Inno Setup installer definition
-├── installer/linux/             # Linux .desktop entry
-├── scripts/                     # macOS DMG / Linux .deb+AppImage packagers
-├── run.bat                      # Windows source launcher
-├── build_release.bat            # Windows: directory app, portable EXE, installer
-├── build_release.sh             # macOS / Linux local release build
+├── installer/                   # Windows Inno Setup + Linux .desktop
+├── scripts/                     # windows.bat / macos.sh / linux.sh
+├── Makefile                     # make run / test / windows / macos / linux
 └── .github/workflows/           # Tagged-release automation
 ```
 
 ## Build and Release
 
-### Local Windows build
-
-```bat
-build_release.bat
+```bash
+make windows    # Windows Setup / Portable（需在 Windows 上）
+make macos      # Apple Silicon DMG（需在 macOS 上）
+make linux      # .deb + AppImage（需在 Linux 上）
 ```
 
-The script builds:
+Windows produces:
 
 ```text
 dist\EdgeTTSGui\EdgeTTSGui.exe
@@ -327,15 +320,7 @@ dist\EdgeTTSGui-Portable.exe
 dist\EdgeTTSGui-Setup.exe
 ```
 
-The installer is generated with Inno Setup and includes the bundled application runtime.
-
-### Local macOS / Linux build
-
-```bash
-./build_release.sh
-```
-
-On macOS this produces `dist/EdgeTTSGui-macOS-<arch>.dmg`. On Linux it produces `dist/EdgeTTSGui-linux-amd64.deb` and `dist/EdgeTTSGui-linux-x86_64.AppImage`.
+macOS produces `dist/EdgeTTSGui-macOS-<arch>.dmg`. Linux produces `dist/EdgeTTSGui-linux-amd64.deb` and `dist/EdgeTTSGui-linux-x86_64.AppImage`. The installer scripts live under `scripts/`.
 
 ### GitHub release automation
 

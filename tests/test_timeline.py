@@ -1,6 +1,6 @@
 import unittest
 
-from tts_engine import (
+from edgettsgui.tts.engine import (
     _ssl_context,
     build_sentence_timeline,
     is_ssl_cert_error,
